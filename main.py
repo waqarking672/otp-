@@ -4,7 +4,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 
 BOT_TOKEN = "7787473053:AAFCg166nfOqQY6dJUJfQ3ct5Rfc66dxkrI"
-CUSTOM_OTP_LINK = "https://yourcustomlink.com/otp"
+CUSTOM_OTP_LINK = "https://t.me/e3hacker_chat"
 API_URL = "https://arslan-apis.vercel.app/more/activenumbers"
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
