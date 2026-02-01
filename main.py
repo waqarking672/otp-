@@ -4,8 +4,8 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder
 
 # ================= CONFIG =================
-BOT_TOKEN = "8482241042:AAEAiSlVTyzS6AOq3Uuh4P5yjr0yzwzhDXU"           # 🔴 BotFather se NEW token
-TARGET_CHAT = "@e3hacker_chat"            # group / channel username
+BOT_TOKEN = "8373740550:AAF2Ig-eVD_vTOGdfKVgxVtdXtbOuhOkozw"           # 🔴 BotFather se NEW token
+TARGET_CHAT = "@arslanmdotp"            # group / channel username
 
 OTP_API = "https://arslan-apis.vercel.app/more/liveotp2"
 POLL_INTERVAL = 3                         # seconds
@@ -41,7 +41,7 @@ async def otp_loop(app):
                     f"🔐 *OTP:* *{otp['otp']}*\n"
                     f"🛠 *Service:* {otp.get('service','')}\n"
                     f"⏰ *Time:* {otp.get('received_at','')}\n\n"
-                    "Powered by *E3-HACKER Official* 🇵🇰"
+                    "Powered by *ArslanMD Official* 🇵🇰"
                 )
 
                 keyboard = InlineKeyboardMarkup([
