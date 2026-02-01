@@ -1,47 +1,83 @@
+import asyncio
 import requests
-import random
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ApplicationBuilder
 
-BOT_TOKEN = "7787473053:AAFCg166nfOqQY6dJUJfQ3ct5Rfc66dxkrI"
-CUSTOM_OTP_LINK = "https://t.me/e3hacker_chat"
-API_URL = "https://arslan-apis.vercel.app/more/activenumbers"
+# ================= CONFIG =================
+BOT_TOKEN = "8482241042:AAEAiSlVTyzS6AOq3Uuh4P5yjr0yzwzhDXU"           # 🔴 BotFather se NEW token
+TARGET_CHAT = "@e3hacker_chat"            # group / channel username
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    keyboard = [[InlineKeyboardButton("Get Number", callback_data="get_number")]]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text("Welcome! Choose an option:", reply_markup=reply_markup)
+OTP_API = "https://arslan-apis.vercel.app/more/liveotp2"
+POLL_INTERVAL = 3                         # seconds
 
-async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
+CHANNEL_BUTTON_TEXT = "🔔 Join Official Channel"
+CHANNEL_BUTTON_URL  = "https://t.me/e3hacker"   # tumhara channel link
 
-    if query.data == "get_number":
+# ================= MEMORY =================
+seen = set()
+
+# ================= OTP LOOP =================
+async def otp_loop(app):
+    while True:
         try:
-            response = requests.get(API_URL)
-            data = response.json()
-            numbers = data.get("result", [])
-            if numbers:
-                number = random.choice(numbers)  # random number from the list
-            else:
-                number = "No numbers available"
+            r = requests.get(OTP_API, timeout=20)
+            data = r.json()
+
+            if not data.get("status") or "result" not in data:
+                await asyncio.sleep(POLL_INTERVAL)
+                continue
+
+            for otp in data["result"]:
+                key = f"{otp['number']}-{otp['otp']}"
+                if key in seen:
+                    continue
+
+                seen.add(key)
+                asyncio.create_task(clean_key(key))
+
+                msg = (
+                    "📩 *OTP RECEIVED*\n\n"
+                    f"📞 *Number:* `{otp['number']}`\n"
+                    f"🔐 *OTP:* *{otp['otp']}*\n"
+                    f"🛠 *Service:* {otp.get('service','')}\n"
+                    f"⏰ *Time:* {otp.get('received_at','')}\n\n"
+                    "Powered by *E3-HACKER Official* 🇵🇰"
+                )
+
+                keyboard = InlineKeyboardMarkup([
+                    [InlineKeyboardButton(CHANNEL_BUTTON_TEXT, url=CHANNEL_BUTTON_URL)]
+                ])
+
+                await app.bot.send_message(
+                    chat_id=TARGET_CHAT,
+                    text=msg,
+                    reply_markup=keyboard,
+                    parse_mode="Markdown"
+                )
+
         except Exception as e:
-            number = "Error fetching number"
+            print("BOT ERROR:", e)
 
-        keyboard = [
-            [
-                InlineKeyboardButton("Refresh Number", callback_data="get_number"),
-                InlineKeyboardButton("OTP", url=CUSTOM_OTP_LINK)
-            ]
-        ]
-        reply_markup = InlineKeyboardMarkup(keyboard)
-        await query.edit_message_text(f"📱 Number: {number}", reply_markup=reply_markup)
+        await asyncio.sleep(POLL_INTERVAL)
 
+async def clean_key(key):
+    await asyncio.sleep(30 * 60)
+    seen.discard(key)
+
+# ================= POST INIT =================
+async def post_init(app):
+    asyncio.create_task(otp_loop(app))
+
+# ================= MAIN =================
 def main():
-    app = Application.builder().token(BOT_TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CallbackQueryHandler(button))
-    print("Bot is running...")
+    app = (
+        ApplicationBuilder()
+        .token(BOT_TOKEN)
+        .post_init(post_init)
+        .build()
+    )
+
+    print("🤖 Auto OTP Receiver Bot Running...")
     app.run_polling()
 
 if __name__ == "__main__":
